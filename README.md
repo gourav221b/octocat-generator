@@ -51,6 +51,16 @@ Transform your photo into a personalized GitHub Octocat avatar using AI! This ap
 
    Navigate to [http://localhost:3000](http://localhost:3000)
 
+## Available Scripts
+
+- `npm run dev` - Start the development server
+- `npm run build` - Build for production
+- `npm start` - Start production server locally
+- `npm run lint` - Run ESLint
+- `npm run pages:build` - Build for Cloudflare Pages deployment
+- `npm run pages:deploy` - Build and deploy to Cloudflare Pages
+- `npm run pages:dev` - Run Cloudflare Pages development server with watch mode
+
 ## How It Works
 
 1. **Upload or Capture**: Choose to upload a photo or take one with your camera
@@ -66,7 +76,7 @@ Transform your photo into a personalized GitHub Octocat avatar using AI! This ap
 - **AI Models**:
   - Gemini 1.5 Flash (image analysis)
   - Imagen 3 (image generation)
-- **Deployment**: Ready for Vercel, Netlify, or any Node.js hosting
+- **Deployment**: Cloudflare Pages (optimized), Vercel, or any Node.js hosting
 
 ## API Usage
 
@@ -87,13 +97,92 @@ project-test/
 │   ├── layout.tsx             # Root layout
 │   ├── page.tsx               # Main UI component
 │   └── globals.css            # Tailwind styles
+├── .vercel/output/            # Build output for Cloudflare Pages (generated)
 ├── .env.local                 # Environment variables (create this)
-├── .env.example               # Example environment file
+├── next.config.js             # Next.js configuration
+├── wrangler.toml              # Cloudflare Pages configuration
 ├── package.json               # Dependencies
 └── README.md                  # This file
 ```
 
 ## Deployment
+
+### Deploy to Cloudflare Pages (Recommended)
+
+This application is optimized for Cloudflare Pages deployment with built-in support.
+
+#### Prerequisites
+
+- A Cloudflare account ([Sign up free](https://dash.cloudflare.com/sign-up))
+- Wrangler CLI installed (included in dev dependencies)
+
+#### Deployment Steps
+
+1. **Build the application**
+   ```bash
+   npm run pages:build
+   ```
+
+2. **Authenticate with Cloudflare**
+   ```bash
+   npx wrangler login
+   ```
+   This will open a browser window to authorize the CLI.
+
+3. **Deploy to Cloudflare Pages**
+   ```bash
+   npx wrangler pages deploy .vercel/output/static --project-name=octocat-generator
+   ```
+
+   Or use the convenience script:
+   ```bash
+   npm run pages:deploy
+   ```
+
+4. **Configure Compatibility Flags** (Important!)
+
+   After your first deployment, you must enable Node.js compatibility:
+
+   a. Go to your [Cloudflare Dashboard](https://dash.cloudflare.com/)
+
+   b. Navigate to: **Workers & Pages** → **octocat-generator** → **Settings** → **Functions**
+
+   c. Under **Compatibility flags**, add:
+      - Production: `nodejs_compat`
+      - Preview: `nodejs_compat`
+
+   d. (Optional) Set **Compatibility date** to: `2024-11-19`
+
+   e. Click **Save**
+
+5. **Add Environment Variables**
+
+   In the same Settings page:
+
+   a. Go to **Environment variables** section
+
+   b. Add the following for both **Production** and **Preview**:
+      ```
+      Variable name: GEMINI_API_KEY
+      Value: your_actual_api_key_here
+      ```
+
+   c. Click **Save**
+
+6. **Access Your Deployment**
+
+   Your app will be available at:
+   - Production: `https://octocat-generator.pages.dev`
+   - Preview deployments: `https://[hash].octocat-generator.pages.dev`
+
+#### Subsequent Deployments
+
+After the initial setup, redeploy with:
+```bash
+npm run pages:deploy
+```
+
+The compatibility flags and environment variables will persist across deployments.
 
 ### Deploy to Vercel
 
@@ -115,10 +204,22 @@ Remember to set the `GEMINI_API_KEY` environment variable on your hosting platfo
 
 ## Troubleshooting
 
+### Cloudflare: "no nodejs_compat compatibility flag set" error
+This error appears when the Node.js compatibility flag isn't enabled on Cloudflare Pages.
+
+**Solution**:
+1. Go to your Cloudflare Dashboard
+2. Navigate to **Workers & Pages** → **your-project** → **Settings** → **Functions**
+3. Add `nodejs_compat` to the **Compatibility flags** for both Production and Preview
+4. Save and redeploy (or just wait a moment - existing deployments will work after saving)
+
+See the [Deployment](#deployment) section for detailed instructions.
+
 ### "Invalid API key" error
-- Verify your API key is correct in `.env.local`
+- Verify your API key is correct in `.env.local` (local dev) or environment variables (production)
 - Ensure the API key has the necessary permissions
 - Check that you're using the Gemini API (not a different Google API key)
+- For Cloudflare: Make sure you've added the environment variable to both Production and Preview
 
 ### "Model not available" error
 - Imagen 3 access may require additional setup or credits
